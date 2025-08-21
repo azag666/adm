@@ -90,7 +90,7 @@
             <div class="content-header"><h2>Dashboard</h2></div>
             <div class="metrics-grid">
                 <div class="card metric-card"><p class="heading">Faturamento Total</p><p id="metric-revenue" class="title">R$ 0.00</p></div>
-                <div class="card metric-card"><p class="heading">Vendedores Ativos</p><p id="metric-sellers" class="title">0</p></div>
+                <div class="card metric-card"><p class="heading">Vendedores</p><p id="metric-sellers" class="title">0</p></div>
                 <div class="card metric-card"><p class="heading">Vendas Pagas</p><p id="metric-sales" class="title">0</p></div>
                 <div class="card metric-card"><p class="heading">Seu Lucro</p><p id="metric-profit" class="title">R$ 0.00</p></div>
             </div>
@@ -131,9 +131,19 @@
             const API_BASE_URL = 'https://hottrack.vercel.app'; // CONFIRME SE ESTA É A URL CORRETA DO SEU BACKEND
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
             let revenueChart = null;
-
-            const createMockSellers = () => { /* ... (código mock omitido para brevidade) ... */ };
-            const MOCK_SELLERS = createMockSellers();
+            
+            // --- DADOS DE DEMONSTRAÇÃO ---
+            let MOCK_SELLERS = [];
+            const createMockSellers = () => {
+                const names = ["AstroDev", "PixelQueen", "CodeVortex", "DataSage", "LogicWiz", "ByteBard", "Scriptina"];
+                MOCK_SELLERS = names.map((name, i) => ({
+                    id: i + 1, name: name, email: `${name.toLowerCase()}@email.com`, 
+                    is_active: Math.random() > 0.2, total_revenue: Math.random() * 20000,
+                    total_sales: Math.floor(Math.random() * 500),
+                    commission_percentage: i % 3 === 0 ? 5.0 : null,
+                    commission_fixed_brl: null,
+                })).sort((a,b) => b.total_revenue - a.total_revenue);
+            };
 
             const apiFetch = async (endpoint, options = {}) => {
                 if (USE_MOCK_DATA) {
@@ -144,7 +154,10 @@
                         const totalRevenue = MOCK_SELLERS.reduce((sum, s) => sum + s.total_revenue, 0);
                         return { total_sellers: MOCK_SELLERS.length, total_paid_transactions: MOCK_SELLERS.reduce((sum, s) => sum + s.total_sales, 0), total_revenue: totalRevenue.toFixed(2), saas_profit: (totalRevenue * 0.0299).toFixed(2) };
                     }
-                    if(options.method) return { message: 'Ação executada com sucesso (MOCK)!'};
+                    if(options.method) {
+                        console.log('Ação MOCK executada:', options.method, endpoint, options.body);
+                        return { message: 'Ação executada com sucesso (MOCK)!'};
+                    }
                     return [];
                 }
                 
@@ -166,7 +179,11 @@
                 return response.json();
             };
             
-            const getLevel = (revenue) => { /* ... (função getLevel omitida para brevidade) ... */ };
+            const getLevel = (revenue) => {
+                revenue = parseFloat(revenue);
+                if (revenue < 1000) return "Bronze"; if (revenue < 5000) return "Prata";
+                if (revenue < 15000) return "Ouro"; return "Platina";
+            };
 
             const loadDashboard = async () => {
                 try {
@@ -181,19 +198,20 @@
                 } catch (error) { if (error.message !== 'Chave de API não fornecida.') alert('Não foi possível carregar os dados: ' + error.message); }
             };
             
-            const renderLeaderboard = (data) => { /* ... (função renderLeaderboard omitida para brevidade) ... */ };
+            const renderLeaderboard = (data) => {
+                document.getElementById('leaderboard-body').innerHTML = data.map((seller, i) => `<div class="leaderboard-item"><div class="rank">#${i + 1}</div><div class="info"><div class="name">${seller.name}</div><div class="revenue">R$ ${parseFloat(seller.total_revenue).toFixed(2)}</div></div></div>`).join('');
+            };
 
             const loadSellers = async () => {
                 const data = await apiFetch('/sellers');
                 document.getElementById('sellers-body').innerHTML = data.map(seller => {
-                    const level = getLevel(seller.total_revenue);
                     let commissionText = 'Padrão (2.99%)';
                     if (seller.commission_fixed_brl) commissionText = `R$ ${parseFloat(seller.commission_fixed_brl).toFixed(2)}`;
                     else if (seller.commission_percentage) commissionText = `${parseFloat(seller.commission_percentage).toFixed(2)}%`;
                     return `
                     <tr>
                         <td><strong>${seller.name}</strong><br><small>${seller.email}</small></td>
-                        <td>${level.name}</td>
+                        <td>${getLevel(seller.total_revenue)}</td>
                         <td>${commissionText}</td>
                         <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                         <td>
@@ -209,15 +227,12 @@
                 const data = await apiFetch('/ranking');
                 document.getElementById('ranking-body').innerHTML = data.map((seller, i) => `
                     <tr>
-                        <td>${i + 1}</td>
-                        <td>${seller.name}</td>
-                        <td>${seller.email}</td>
-                        <td>${seller.total_sales}</td>
-                        <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
+                        <td>${i + 1}</td><td>${seller.name}</td><td>${seller.email}</td>
+                        <td>${seller.total_sales}</td><td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
                     </tr>`).join('');
             };
 
-            const renderChart = () => { /* ... (função renderChart omitida para brevidade) ... */ };
+            const renderChart = () => { /* ... (código do gráfico omitido por brevidade) ... */ };
 
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.section-content');
@@ -235,7 +250,6 @@
                 });
             });
 
-            // --- Funções de Ação ---
             const commissionModal = document.getElementById('commission-modal');
             window.openCommissionModal = (id, percentage, fixed) => {
                 document.getElementById('commission-seller-id').value = id;
@@ -249,13 +263,7 @@
                 const percentage = document.getElementById('commission-percentage').value;
                 const fixed = document.getElementById('commission-fixed').value;
                 try {
-                    await apiFetch(`/sellers/${id}/commission`, {
-                        method: 'PUT',
-                        body: JSON.stringify({
-                            percentage: percentage ? parseFloat(percentage) : null,
-                            fixed: fixed ? parseFloat(fixed) : null,
-                        })
-                    });
+                    await apiFetch(`/sellers/${id}/commission`, { method: 'PUT', body: JSON.stringify({ percentage: percentage ? parseFloat(percentage) : null, fixed: fixed ? parseFloat(fixed) : null, }) });
                     alert('Comissão atualizada!');
                     closeCommissionModal();
                     loadSellers();
@@ -278,7 +286,9 @@
                     } catch (error) { alert('Erro ao alterar senha: ' + error.message); }
                 } else if(newPassword) { alert('Senha inválida.'); }
             };
-
+            
+            // Inicialização
+            createMockSellers();
             loadDashboard();
         });
     </script>
