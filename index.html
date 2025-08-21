@@ -3,91 +3,104 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Painel Admin</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>Admin - SaaS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
+        :root {
+            --bg: #000000; --bg-card: #111111; --border-color: #2a2a2a;
+            --text-primary: #f5f5f7; --text-secondary: #888888;
+            --accent: #ffffff; --accent-hover: #cccccc; --danger: #ff4d4d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-card); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-primary); display: flex; font-size: 14px; }
+        #sidebar { width: 240px; background-color: var(--bg); padding: 2.5rem 1rem; height: 100vh; position: fixed; border-right: 1px solid var(--border-color); z-index: 10; }
+        #sidebar h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 2.5rem; padding: 0 0.5rem; }
+        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .nav-link i { width: 24px; text-align: center; margin-right: 1rem; font-size: 1rem; }
+        .nav-link:hover { color: var(--text-primary); }
+        .nav-link.is-active { color: var(--text-primary); background-color: var(--bg-card); }
+        #main-content { margin-left: 240px; width: calc(100% - 240px); padding: 2.5rem 3.5rem; }
         .section-content { display: none; }
         .section-content.is-active { display: block; }
-        .modal-card-body { padding-bottom: 20px; }
+        .header-bar { margin-bottom: 2rem; }
+        .header-bar h2 { font-size: 2.2rem; font-weight: 700; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        .kpi-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); padding: 1.5rem; }
+        .kpi-card .heading { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 500; }
+        .kpi-card .value { font-size: 2.2rem; font-weight: 700; color: var(--text-primary); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1.25rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        th { font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        tbody tr:hover { background-color: #050505; }
+        .tag { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .tag.is-success { background-color: #0f2418; color: #28a745; border: 1px solid #28a745; }
+        .tag.is-danger { background-color: #2e1518; color: #ff4d4d; border: 1px solid #ff4d4d; }
+        .action-button { background: none; border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; width: 36px; height: 36px; border-radius: 8px; margin: 0 4px; transition: all 0.2s; }
+        .action-button:hover { color: var(--text-primary); border-color: var(--accent-hover); background-color: var(--bg-card); }
+        .action-button.danger:hover { color: var(--danger); border-color: var(--danger); }
+        .modal { display: none; align-items: center; justify-content: center; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); width: 80%; max-width: 500px; border-radius: 12px; position: relative; }
+        .close-button { color: var(--text-secondary); position: absolute; top: 1rem; right: 1.5rem; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--text-secondary); }
+        .form-input { width: 100%; padding: .75rem; background-color: var(--bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-bottom: 1rem; font-size: 1rem; }
+        .modal-button { width: 100%; padding: 0.8rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; background-color: var(--accent); color: var(--bg); }
     </style>
 </head>
 <body>
     <div id="commission-modal" class="modal">
-        <div class="modal-background" onclick="closeCommissionModal()"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Definir Comissão</p>
-                <button class="delete" aria-label="close" onclick="closeCommissionModal()"></button>
-            </header>
-            <section class="modal-card-body">
-                <input type="hidden" id="commission-seller-id">
-                <div class="field">
-                    <label class="label">Comissão Percentual (%)</label>
-                    <div class="control">
-                        <input class="input" type="number" id="commission-percentage" placeholder="Ex: 5.00 para 5%">
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">Comissão Fixa (R$)</label>
-                    <div class="control">
-                        <input class="input" type="number" id="commission-fixed" placeholder="Ex: 0.50 para 50 centavos">
-                    </div>
-                </div>
-                <p class="help">Deixe ambos em branco para o padrão (2.99%). Se ambos forem preenchidos, a comissão FIXA terá prioridade.</p>
-            </section>
-            <footer class="modal-card-foot">
-                <button class="button is-success" onclick="saveCommission()">Salvar</button>
-                <button class="button" onclick="closeCommissionModal()">Cancelar</button>
-            </footer>
+        <div class="modal-content">
+            <span class="close-button" onclick="closeCommissionModal()">&times;</span>
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Definir Comissão</h3>
+            <input type="hidden" id="commission-seller-id">
+            <div>
+                <label for="commission-percentage" class="form-label">Comissão Percentual (%)</label>
+                <input type="number" id="commission-percentage" class="form-input" placeholder="Ex: 5.00 para 5%">
+            </div>
+            <div>
+                <label for="commission-fixed" class="form-label">Comissão Fixa (R$)</label>
+                <input type="number" id="commission-fixed" class="form-input" placeholder="Ex: 0.50 para 50 centavos">
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1.5rem;">Deixe ambos em branco para o padrão. Se ambos forem preenchidos, a comissão FIXA terá prioridade.</p>
+            <button class="modal-button" onclick="saveCommission()">Salvar Comissão</button>
         </div>
     </div>
 
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Painel Administrativo</h1>
-            <p class="subtitle">Gerenciamento do SaaS</p>
+    <nav id="sidebar">
+        <h1>Admin</h1>
+        <a class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a class="nav-link" data-tab="sellers"><i class="fas fa-users-cog"></i> Vendedores</a>
+        <a class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
+    </nav>
 
-            <div class="tabs is-boxed">
-                <ul>
-                    <li class="is-active" data-tab="dashboard"><a><span class="icon is-small"><i class="fas fa-chart-line"></i></span><span>Dashboard</span></a></li>
-                    <li data-tab="sellers"><a><span class="icon is-small"><i class="fas fa-users"></i></span><span>Vendedores</span></a></li>
-                    <li data-tab="ranking"><a><span class="icon is-small"><i class="fas fa-trophy"></i></span><span>Ranking</span></a></li>
-                </ul>
-            </div>
+    <main id="main-content">
+        <section id="dashboard" class="section-content is-active">
+            <div class="header-bar"><h2>Dashboard</h2></div>
+            <div class="kpi-grid" id="dashboard-metrics"><p>Carregando...</p></div>
+        </section>
 
-            <div id="dashboard" class="section-content is-active">
-                <div class="columns is-multiline" id="dashboard-metrics"><p>Carregando...</p></div>
-            </div>
-
-            <div id="sellers" class="section-content">
-                <div class="table-container">
-                    <table class="table is-fullwidth is-striped is-hoverable">
-                        <thead>
-                            <tr>
-                                <th>Vendedor</th>
-                                <th>Comissão</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sellers-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="ranking" class="section-content">
-                <div class="table-container">
-                    <table class="table is-fullwidth is-striped is-hoverable">
-                        <thead>
-                            <tr><th>#</th><th>Nome</th><th>Email</th><th>Vendas Pagas</th><th>Faturamento Total</th></tr>
-                        </thead>
-                        <tbody id="ranking-body"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </section>
+        <section id="sellers" class="section-content">
+            <div class="header-bar"><h2>Gerenciar Vendedores</h2></div>
+             <table>
+                <thead><tr><th>Vendedor</th><th>Comissão</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody id="sellers-body"></tbody>
+            </table>
+        </section>
+        
+        <section id="ranking" class="section-content">
+            <div class="header-bar"><h2>Ranking de Vendedores</h2></div>
+             <table>
+                <thead><tr><th>#</th><th>Nome</th><th>Email</th><th>Vendas Pagas</th><th>Faturamento Total</th></tr></thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+        </section>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -119,10 +132,10 @@
                 try {
                     const data = await apiFetch('/dashboard');
                     document.getElementById('dashboard-metrics').innerHTML = `
-                        <div class="column is-one-quarter"><div class="notification is-link"><p class="heading">Faturamento Total</p><p class="title">${formatCurrency(data.total_revenue)}</p></div></div>
-                        <div class="column is-one-quarter"><div class="notification is-primary"><p class="heading">Vendedores</p><p class="title">${data.total_sellers}</p></div></div>
-                        <div class="column is-one-quarter"><div class="notification is-info"><p class="heading">Vendas Pagas</p><p class="title">${data.total_paid_transactions}</p></div></div>
-                        <div class="column is-one-quarter"><div class="notification is-success"><p class="heading">Lucro do SaaS</p><p class="title">${formatCurrency(data.saas_profit)}</p></div></div>
+                        <div class="kpi-card"><p class="heading">Faturamento Total</p><p class="value">${formatCurrency(data.total_revenue)}</p></div>
+                        <div class="kpi-card"><p class="heading">Vendedores</p><p class="value">${data.total_sellers}</p></div>
+                        <div class="kpi-card"><p class="heading">Vendas Pagas</p><p class="value">${data.total_paid_transactions}</p></div>
+                        <div class="kpi-card"><p class="heading">Lucro do SaaS</p><p class="value">${formatCurrency(data.saas_profit)}</p></div>
                     `;
                 } catch (error) { if (error.message !== 'Chave de API não fornecida.') alert('Erro ao carregar dashboard: ' + error.message); }
             };
@@ -141,11 +154,9 @@
                             <td>${commissionText}</td>
                             <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                             <td>
-                                <div class="buttons are-small">
-                                    <button class="button ${seller.is_active ? 'is-warning' : 'is-primary'}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">${seller.is_active ? 'Bloquear' : 'Ativar'}</button>
-                                    <button class="button is-info" onclick="changeSellerPassword(${seller.id})">Alterar Senha</button>
-                                    <button class="button" onclick="openCommissionModal(${seller.id}, '${seller.commission_percentage || ''}', '${seller.commission_fixed_brl || ''}')">Comissão</button>
-                                </div>
+                                <button title="${seller.is_active ? 'Bloquear' : 'Ativar'}" class="action-button ${seller.is_active ? 'danger' : ''}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})"><i class="fas ${seller.is_active ? 'fa-lock' : 'fa-lock-open'}"></i></button>
+                                <button title="Alterar Senha" class="action-button" onclick="changeSellerPassword(${seller.id})"><i class="fas fa-key"></i></button>
+                                <button title="Definir Comissão" class="action-button" onclick="openCommissionModal(${seller.id}, '${seller.commission_percentage || ''}', '${seller.commission_fixed_brl || ''}')"><i class="fas fa-percent"></i></button>
                             </td>
                         </tr>`;
                     }).join('');
@@ -163,17 +174,20 @@
                 } catch (error) { if (error.message !== 'Chave de API não fornecida.') alert('Erro ao carregar ranking: ' + error.message); }
             };
             
-            const tabs = document.querySelectorAll('.tabs li');
+            const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.section-content');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(item => item.classList.remove('is-active'));
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if(link.classList.contains('is-active')) return;
+                    navLinks.forEach(item => item.classList.remove('is-active'));
                     sections.forEach(item => item.classList.remove('is-active'));
-                    tab.classList.add('is-active');
-                    document.getElementById(tab.dataset.tab).classList.add('is-active');
-                    if (tab.dataset.tab === 'dashboard') loadDashboard();
-                    else if (tab.dataset.tab === 'sellers') loadSellers();
-                    else if (tab.dataset.tab === 'ranking') loadRanking();
+                    link.classList.add('is-active');
+                    const targetSection = document.getElementById(link.dataset.tab);
+                    if (targetSection) targetSection.classList.add('is-active');
+                    if (link.dataset.tab === 'dashboard') loadDashboard();
+                    else if (link.dataset.tab === 'sellers') loadSellers();
+                    else if (link.dataset.tab === 'ranking') loadRanking();
                 });
             });
 
@@ -182,9 +196,9 @@
                 document.getElementById('commission-seller-id').value = id;
                 document.getElementById('commission-percentage').value = percentage;
                 document.getElementById('commission-fixed').value = fixed;
-                commissionModal.classList.add('is-active');
+                commissionModal.style.display = 'flex';
             };
-            window.closeCommissionModal = () => commissionModal.classList.remove('is-active');
+            window.closeCommissionModal = () => commissionModal.style.display = 'none';
             window.saveCommission = async () => {
                 const id = document.getElementById('commission-seller-id').value;
                 const percentage = document.getElementById('commission-percentage').value;
