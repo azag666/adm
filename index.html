@@ -33,7 +33,7 @@
         .metric-card .title { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
         .metric-card.profit .title { color: var(--success-color); }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle;}
         th { font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         tbody tr { transition: background-color 0.2s; }
         tbody tr:hover { background-color: #2a2d38; }
@@ -111,12 +111,12 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 15%;">Vendedor</th>
+                        <th style="width: 20%;">Vendedor</th>
                         <th style="width: 15%;">Métricas de Uso</th>
                         <th style="width: 20%;">Provedores</th>
                         <th style="width: 10%;">Comissão</th>
                         <th style="width: 10%;">Status</th>
-                        <th style="width: 30%;">Ações</th>
+                        <th style="width: 25%;">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="sellers-body"></tbody>
@@ -136,8 +136,6 @@
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
             const commissionModal = document.getElementById('commission-modal');
 
-            // ... (A lógica JS principal permanece a mesma, com as adições abaixo)
-            
             const apiFetch = async (endpoint, options = {}) => {
                  if (!ADMIN_API_KEY) {
                     ADMIN_API_KEY = prompt('Por favor, insira sua Chave de API de Administrador:');
@@ -165,7 +163,6 @@
                     if(startDate && endDate) {
                         query += `?startDate=${startDate}&endDate=${endDate}`;
                     }
-
                     const data = await apiFetch(query);
                     document.getElementById('dashboard-metrics').innerHTML = `
                         <div class="metric-card"><p class="heading">Vendedores</p><p class="title">${data.total_sellers}</p></div>
@@ -201,7 +198,7 @@
                     
                     return `
                     <tr>
-                        <td>
+                        <td style="white-space: normal;">
                             <strong>${seller.name}</strong><br>
                             <small>${seller.email}</small>
                         </td>
@@ -224,16 +221,13 @@
                 }).join('');
             };
 
-            // Funções do Modal de Comissão
             window.openCommissionModal = (id, percentage, fixed) => {
                 document.getElementById('commission-seller-id').value = id;
                 document.getElementById('commission-percentage').value = percentage;
                 document.getElementById('commission-fixed').value = fixed;
                 commissionModal.style.display = 'block';
             };
-            window.closeCommissionModal = () => {
-                commissionModal.style.display = 'none';
-            };
+            window.closeCommissionModal = () => commissionModal.style.display = 'none';
             window.saveCommission = async () => {
                 const id = document.getElementById('commission-seller-id').value;
                 const percentage = document.getElementById('commission-percentage').value;
@@ -250,7 +244,6 @@
                 loadSellers();
             };
 
-            // O resto das funções (loadRanking, loadTransactions, navegação, etc) permanece o mesmo
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.section-content');
             navLinks.forEach(link => {
@@ -260,12 +253,10 @@
                     sections.forEach(section => section.classList.remove('is-active'));
                     link.classList.add('is-active');
                     document.getElementById(link.dataset.tab).classList.add('is-active');
-                    switch(link.dataset.tab) {
-                        case 'dashboard': loadDashboard(); break;
-                        case 'ranking': loadRanking(); break;
-                        case 'sellers': loadSellers(); break;
-                        case 'transactions': loadTransactions(); break;
-                    }
+                    const tab = link.dataset.tab;
+                    if (tab === 'dashboard') loadDashboard();
+                    else if (tab === 'sellers') loadSellers();
+                    // Adicione chamadas para outras abas aqui
                 });
             });
             window.toggleSellerActive = async (id, isActive) => {
