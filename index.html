@@ -54,9 +54,7 @@
     <nav id="sidebar">
         <h1>SaaS</h1>
         <a class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
-        <a class="nav-link" data-tab="sellers"><i class="fas fa-users-cog"></i> Vendedores</a>
-        <a class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
-    </nav>
+        </nav>
 
     <main id="main-content">
         <section id="dashboard" class="section-content is-active">
@@ -100,30 +98,15 @@
             const API_BASE_URL = 'https://hottrack.vercel.app'; // CONFIRME A URL DO SEU BACKEND
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
             let mainChart = null;
-
-            // DADOS DE DEMONSTRAÇÃO
-            const createMockData = () => ({
-                kpis: {
-                    revenue: { value: 48590.75, trend: 15.2 },
-                    profit: { value: 1452.86, trend: 15.2 },
-                    newSellers: { value: 8, trend: -10.0 },
-                    sales: { value: 650, trend: 12.5 }
-                },
-                chart: {
-                    labels: Array.from({length: 30}, (_, i) => new Date(Date.now() - (29-i)*86400000).toISOString().split('T')[0]),
-                    revenueData: Array.from({length: 30}, () => Math.random() * 2000 + 500)
-                },
-                leaderboard: [
-                    { name: "PixelQueen", revenue: 12050.50 }, { name: "AstroDev", revenue: 9800.00 },
-                    { name: "DataSage", revenue: 7500.80 }, { name: "CodeVortex", revenue: 6200.00 },
-                    { name: "LogicWiz", revenue: 4100.20 }
-                ]
-            });
-
+            
             const apiFetch = async (endpoint, options = {}) => {
                 if (USE_MOCK_DATA) {
-                    console.log(`[MOCK] Chamando API: ${endpoint}`);
-                    return createMockData();
+                    // Lógica de mock (não será usada se USE_MOCK_DATA for false)
+                    const mockData = {
+                        kpis: { revenue: { value: 100, trend: 10 }, profit: { value: 3, trend: 10 }, newSellers: { value: 2, trend: 5 }, sales: { value: 5, trend: 8 }},
+                        chart: { labels: [], revenueData: [] }, leaderboard: []
+                    };
+                    return mockData;
                 }
                 
                 if (!ADMIN_API_KEY) {
@@ -203,8 +186,8 @@
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: var(--text-secondary), callback: (value) => `R$${value/1000}k` } },
-                            x: { type: 'time', time: { unit: 'day', tooltipFormat: 'dd MMM' }, grid: { display: false }, ticks: { color: var(--text-secondary) } }
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'var(--text-secondary)', callback: (value) => `R$${value/1000}k` } },
+                            x: { type: 'time', time: { unit: 'day', tooltipFormat: 'dd MMM' }, grid: { display: false }, ticks: { color: 'var(--text-secondary)' } }
                         },
                         interaction: { intersect: false, mode: 'index' }
                     }
@@ -221,16 +204,12 @@
                     e.preventDefault();
                     if(link.classList.contains('is-active')) return;
                     navLinks.forEach(item => item.classList.remove('is-active'));
-                    sections.forEach(section => section.classList.remove('is-active'));
+                    sections.forEach(item => item.classList.remove('is-active')); // Corrigido aqui
                     link.classList.add('is-active');
                     const targetSection = document.getElementById(link.dataset.tab);
                     if (targetSection) {
                         targetSection.classList.add('is-active');
                     }
-                    
-                    // Carrega os dados da aba correspondente (a implementar para outras abas)
-                    if (link.dataset.tab === 'dashboard') loadDashboardData();
-                    // else if (link.dataset.tab === 'sellers') loadSellers();
                 });
             });
 
