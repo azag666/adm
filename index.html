@@ -34,7 +34,7 @@
             height: 100vh; position: fixed; border-right: 1px solid var(--border-color); z-index: 10;
         }
         #sidebar h1 { font-family: 'Roboto Mono', monospace; font-size: 1.5rem; font-weight: 500; margin-bottom: 2.5rem; padding: 0 0.5rem; text-shadow: 0 0 5px var(--accent-glow); }
-        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 500; transition: all 0.2s ease-in-out; border-left: 3px solid transparent; }
+        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 500; transition: all 0.2s ease-in-out; border-left: 3px solid transparent; cursor: pointer; }
         .nav-link i { width: 24px; text-align: center; margin-right: 1rem; }
         .nav-link:hover { background-color: var(--accent-glow-transparent); color: var(--text-primary); }
         .nav-link.is-active { background-color: var(--accent-glow-transparent); color: var(--accent-glow); border-left: 3px solid var(--accent-glow); }
@@ -85,26 +85,29 @@
         .activity-feed .item.user .icon { background-color: var(--accent-purple-transparent); color: var(--accent-purple); }
         .activity-feed .timestamp { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tag { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .tag.is-success { background-color: rgba(40, 167, 69, 0.2); color: #28a745; }
+        .tag.is-danger { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
     </style>
 </head>
 <body>
     <nav id="sidebar">
-        <h1>[HotTrack]</h1>
-        <a href="#" class="nav-link is-active" data-tab="dashboard"><i class="fas fa-satellite-dish"></i> Dashboard</a>
-        <a href="#" class="nav-link" data-tab="sellers"><i class="fas fa-users-cog"></i> Vendedores</a>
-        <a href="#" class="nav-link" data-tab="feed"><i class="fas fa-wave-square"></i> Feed de Atividade</a>
+        <h1>[Admin]</h1>
+        <a class="nav-link is-active" data-tab="dashboard"><i class="fas fa-satellite-dish"></i> Dashboard</a>
+        <a class="nav-link" data-tab="sellers"><i class="fas fa-users-cog"></i> Vendedores</a>
+        <a class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
     </nav>
 
     <main id="main-content">
         <section id="dashboard" class="section-content is-active">
             <div class="content-header">
                 <h2>Cockpit de Controle</h2>
-                <p>Análise de performance em tempo real.</p>
             </div>
             <div class="metrics-grid">
                 <div class="card metric-card"><p class="heading">Faturamento Total</p><p id="metric-revenue" class="title">R$ 0.00</p></div>
                 <div class="card metric-card"><p class="heading">Vendedores Ativos</p><p id="metric-sellers" class="title">0</p></div>
-                <div class="card metric-card"><p class="heading">Vendas Pagas (24h)</p><p id="metric-sales" class="title">0</p></div>
+                <div class="card metric-card"><p class="heading">Vendas Pagas</p><p id="metric-sales" class="title">0</p></div>
                 <div class="card metric-card profit"><p class="heading">Seu Lucro (Estimado)</p><p id="metric-profit" class="title">R$ 0.00</p></div>
             </div>
             <div class="dashboard-grid">
@@ -112,7 +115,7 @@
                     <canvas id="revenue-chart"></canvas>
                 </div>
                 <div class="card">
-                    <h3 style="font-weight: 600; margin-bottom: 1.5rem;">Leaderboard</h3>
+                    <h3 style="font-weight: 600; margin-bottom: 1.5rem;">Leaderboard (Top 5)</h3>
                     <div id="leaderboard-body"></div>
                 </div>
             </div>
@@ -127,48 +130,54 @@
                 <tbody id="sellers-body"></tbody>
             </table>
         </section>
-
-        <section id="feed" class="section-content">
-             <div class="content-header"><h2>Feed de Atividade</h2></div>
-             <div class="card activity-feed" id="activity-feed-body"></div>
+        
+        <section id="ranking" class="section-content">
+             <div class="content-header"><h2>Ranking Completo</h2></div>
+             <table>
+                <thead>
+                    <tr><th>#</th><th>Nome</th><th>Email</th><th>Vendas Pagas</th><th>Faturamento Total</th></tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
         </section>
     </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE_URL = 'https://hottrack.vercel.app';
-            let ADMIN_API_KEY = null;
+            const API_BASE_URL = 'https://hottrack.vercel.app'; // CONFIRME SE ESTA É A URL CORRETA DO SEU BACKEND
+            let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
             let revenueChart = null;
 
-            // --- FUNÇÕES DE MOCK DE DADOS (USADAS PARA DEMONSTRAÇÃO) ---
-            const createMockSellers = () => {
-                const names = ["AstroDev", "PixelQueen", "CodeVortex", "DataSage", "LogicWiz", "ByteBard", "Scriptina"];
-                return names.map((name, i) => {
-                    const revenue = Math.random() * 20000;
-                    return {
-                        id: i + 1, name: name, email: `${name.toLowerCase()}@email.com`, 
-                        is_active: Math.random() > 0.2, total_revenue: revenue,
-                    };
-                }).sort((a,b) => b.total_revenue - a.total_revenue);
+            // Função para buscar dados da API
+            const apiFetch = async (endpoint, options = {}) => {
+                if (!ADMIN_API_KEY) {
+                    ADMIN_API_KEY = prompt('Por favor, insira sua Chave de API de Administrador:');
+                    if (!ADMIN_API_KEY) throw new Error('Chave de API não fornecida.');
+                    sessionStorage.setItem('ADMIN_API_KEY', ADMIN_API_KEY);
+                }
+                const headers = { 'Content-Type': 'application/json', 'x-admin-api-key': ADMIN_API_KEY, ...options.headers, };
+                const response = await fetch(`${API_BASE_URL}/api/admin${endpoint}`, { ...options, headers });
+                if (response.status === 403) {
+                    sessionStorage.removeItem('ADMIN_API_KEY');
+                    throw new Error('Acesso negado. Chave de API inválida.');
+                }
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({ message: 'Ocorreu um erro na API.' }));
+                    throw new Error(error.message);
+                }
+                return response.json();
             };
-            const MOCK_SELLERS = createMockSellers();
-
-            const getLevel = (revenue) => {
-                if (revenue < 1000) return { name: "Bronze", progress: (revenue / 1000) * 100, color: "#cd7f32" };
-                if (revenue < 5000) return { name: "Prata", progress: ((revenue-1000) / 4000) * 100, color: "#c0c0c0" };
-                if (revenue < 15000) return { name: "Ouro", progress: ((revenue-5000) / 10000) * 100, color: "#ffd700" };
-                return { name: "Platina", progress: 100, color: "#e5e4e2" };
-            };
-
-            // --- FUNÇÕES DE RENDERIZAÇÃO ---
-            const animateValue = (element, start, end, duration) => {
-                const obj = document.getElementById(element);
+            
+            // Função para animar os números do dashboard
+            const animateValue = (elementId, start, end, duration, isCurrency = false) => {
+                const obj = document.getElementById(elementId);
+                if (!obj) return;
                 let startTimestamp = null;
                 const step = (timestamp) => {
                     if (!startTimestamp) startTimestamp = timestamp;
                     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                     const currentValue = progress * (end - start) + start;
-                    if (element.includes('revenue') || element.includes('profit')) {
+                    if (isCurrency) {
                          obj.innerHTML = `R$ ${currentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     } else {
                         obj.innerHTML = Math.floor(currentValue).toLocaleString('pt-BR');
@@ -178,34 +187,31 @@
                 window.requestAnimationFrame(step);
             };
 
-            const loadDashboard = async () => {
-                // PARA CONECTAR À API: Descomente a linha abaixo e comente o bloco de mock data
-                // const data = await apiFetch('/dashboard');
-                
-                // --- Mock Data Block ---
-                const totalRevenue = MOCK_SELLERS.reduce((sum, s) => sum + s.total_revenue, 0);
-                const data = {
-                    total_sellers: MOCK_SELLERS.length,
-                    total_paid_transactions: Math.floor(totalRevenue / 75),
-                    total_revenue: totalRevenue.toFixed(2),
-                    saas_profit: (totalRevenue * 0.0299).toFixed(2),
-                };
-                // --- Fim do Mock Data ---
-
-                animateValue("metric-revenue", 0, parseFloat(data.total_revenue), 1500);
-                animateValue("metric-sellers", 0, data.total_sellers, 1500);
-                animateValue("metric-sales", 0, data.total_paid_transactions, 1500);
-                animateValue("metric-profit", 0, parseFloat(data.saas_profit), 1500);
-                
-                loadLeaderboard();
-                renderChart();
+            const getLevel = (revenue) => {
+                revenue = parseFloat(revenue);
+                if (revenue < 1000) return { name: "Bronze", progress: (revenue / 1000) * 100, color: "#cd7f32" };
+                if (revenue < 5000) return { name: "Prata", progress: ((revenue-1000) / 4000) * 100, color: "#c0c0c0" };
+                if (revenue < 15000) return { name: "Ouro", progress: ((revenue-5000) / 10000) * 100, color: "#ffd700" };
+                return { name: "Platina", progress: 100, color: "#e5e4e2" };
             };
 
-            const loadLeaderboard = async () => {
-                // PARA CONECTAR À API: Descomente a linha abaixo e comente a linha do mock
-                // const data = await apiFetch('/ranking');
-                const data = MOCK_SELLERS.slice(0, 5); // Mock
-
+            const loadDashboard = async () => {
+                try {
+                    const data = await apiFetch('/dashboard');
+                    animateValue("metric-revenue", 0, parseFloat(data.total_revenue), 1500, true);
+                    animateValue("metric-sellers", 0, data.total_sellers, 1500);
+                    animateValue("metric-sales", 0, data.total_paid_transactions, 1500);
+                    animateValue("metric-profit", 0, parseFloat(data.saas_profit), 1500, true);
+                    
+                    const rankingData = await apiFetch('/ranking');
+                    renderLeaderboard(rankingData.slice(0, 5));
+                    renderChart();
+                } catch (error) {
+                    alert('Não foi possível carregar os dados do dashboard: ' + error.message);
+                }
+            };
+            
+            const renderLeaderboard = (data) => {
                 document.getElementById('leaderboard-body').innerHTML = data.map((seller, i) => {
                     const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
                     return `
@@ -220,10 +226,7 @@
             };
 
              const loadSellers = async () => {
-                // PARA CONECTAR À API: Descomente a linha abaixo e comente a linha do mock
-                // const data = await apiFetch('/sellers');
-                const data = MOCK_SELLERS; // Mock
-
+                const data = await apiFetch('/sellers');
                 document.getElementById('sellers-body').innerHTML = data.map(seller => {
                     const level = getLevel(seller.total_revenue);
                     return `
@@ -232,49 +235,31 @@
                             <strong style="color: ${level.color};">${seller.name}</strong><br>
                             <small>${seller.email}</small>
                         </td>
-                        <td>
-                            <strong style="color: ${level.color};">${level.name}</strong>
-                        </td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-bar-inner" style="width: ${level.progress}%;"></div>
-                            </div>
-                        </td>
+                        <td><strong style="color: ${level.color};">${level.name}</strong></td>
+                        <td><div class="progress-bar"><div class="progress-bar-inner" style="width: ${level.progress}%;"></div></div></td>
                         <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
                         <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                     </tr>`
                 }).join('');
             };
-
-            const initLiveFeed = () => {
-                const feedContainer = document.getElementById('activity-feed-body');
-                setInterval(() => {
-                    if(document.getElementById('feed').classList.contains('is-active')) {
-                        const isSale = Math.random() > 0.3;
-                        const randomSeller = MOCK_SELLERS[Math.floor(Math.random() * MOCK_SELLERS.length)];
-                        const item = document.createElement('div');
-                        item.className = `item ${isSale ? 'sale' : 'user'}`;
-                        item.innerHTML = `
-                            <div class="icon"><i class="fas ${isSale ? 'fa-dollar-sign' : 'fa-user-plus'}"></i></div>
-                            <div class="info">
-                                <strong>${isSale ? 'Nova Venda' : 'Novo Vendedor'}</strong><br>
-                                <small>${isSale ? `de ${randomSeller.name} - R$ ${(Math.random() * 200).toFixed(2)}` : `${randomSeller.name} se cadastrou`}</small>
-                            </div>
-                            <div class="timestamp">agora</div>
-                        `;
-                        if (feedContainer.firstChild) {
-                            feedContainer.insertBefore(item, feedContainer.firstChild);
-                        } else {
-                            feedContainer.appendChild(item);
-                        }
-                        if (feedContainer.children.length > 10) {
-                            feedContainer.removeChild(feedContainer.lastChild);
-                        }
-                    }
-                }, 4000);
+            
+            const loadRanking = async () => {
+                const data = await apiFetch('/ranking');
+                document.getElementById('ranking-body').innerHTML = data.map((seller, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${seller.name}</td>
+                        <td>${seller.email}</td>
+                        <td>${seller.total_sales}</td>
+                        <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
+                    </tr>`).join('');
             };
 
             const renderChart = () => {
+                // Mock data para o gráfico, já que não temos histórico diário na API ainda
+                const labels = ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'Ontem', 'Hoje'];
+                const chartData = Array.from({length: 7}, () => Math.random() * 5000);
+
                 const ctx = document.getElementById('revenue-chart').getContext('2d');
                 const gradient = ctx.createLinearGradient(0, 0, 0, 300);
                 gradient.addColorStop(0, 'rgba(0, 242, 234, 0.4)');
@@ -283,23 +268,14 @@
                 if (revenueChart) revenueChart.destroy();
                 revenueChart = new Chart(ctx, {
                     type: 'line',
-                    data: {
-                        labels: ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'Ontem', 'Hoje'],
-                        datasets: [{
-                            label: 'Faturamento',
-                            data: Array.from({length: 7}, () => Math.random() * 5000), // Mock data
-                            backgroundColor: gradient,
-                            borderColor: 'rgba(0, 242, 234, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(0, 242, 234, 1)',
-                            pointRadius: 4,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
+                    data: { labels: labels, datasets: [{
+                        label: 'Faturamento', data: chartData, backgroundColor: gradient,
+                        borderColor: 'rgba(0, 242, 234, 1)', borderWidth: 2,
+                        pointBackgroundColor: 'rgba(0, 242, 234, 1)', pointRadius: 4,
+                        tension: 0.4, fill: true
+                    }]},
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
                             y: { grid: { color: 'rgba(128, 137, 163, 0.1)' }, ticks: { color: 'rgba(128, 137, 163, 0.8)' } },
@@ -309,14 +285,12 @@
                 });
             };
 
-            // --- INICIALIZAÇÃO E EVENTOS ---
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.section-content');
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     if(link.classList.contains('is-active')) return;
-
                     navLinks.forEach(item => item.classList.remove('is-active'));
                     sections.forEach(section => section.classList.remove('is-active'));
                     link.classList.add('is-active');
@@ -325,12 +299,12 @@
                     switch(link.dataset.tab) {
                         case 'dashboard': loadDashboard(); break;
                         case 'sellers': loadSellers(); break;
+                        case 'ranking': loadRanking(); break;
                     }
                 });
             });
 
             loadDashboard();
-            initLiveFeed();
         });
     </script>
 </body>
