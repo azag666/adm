@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Painel Administrativo</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .tabs li.is-active a {
+            border-bottom-color: #485fc7;
+            color: #485fc7;
+        }
+        .section-content { display: none; }
+        .section-content.is-active { display: block; }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Painel Administrativo</h1>
+            <p class="subtitle">Gerenciamento do SaaS</p>
+
+            <div class="tabs is-boxed">
+                <ul>
+                    <li class="is-active" data-tab="dashboard"><a><span class="icon is-small"><i class="fas fa-chart-line"></i></span><span>Dashboard</span></a></li>
+                    <li data-tab="ranking"><a><span class="icon is-small"><i class="fas fa-trophy"></i></span><span>Ranking</span></a></li>
+                    <li data-tab="sellers"><a><span class="icon is-small"><i class="fas fa-users"></i></span><span>Vendedores</span></a></li>
+                    <li data-tab="transactions"><a><span class="icon is-small"><i class="fas fa-receipt"></i></span><span>Transações</span></a></li>
+                </ul>
+            </div>
+
+            <div id="dashboard" class="section-content is-active">
+                <div class="columns is-multiline" id="dashboard-metrics">
+                    </div>
+            </div>
+
+            <div id="ranking" class="section-content">
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Vendas Pagas</th>
+                            <th>Faturamento Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ranking-body"></tbody>
+                </table>
+            </div>
+
+            <div id="sellers" class="section-content">
+                 <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellers-body"></tbody>
+                </table>
+            </div>
+
+            <div id="transactions" class="section-content">
+                <table class="table is-fullwidth is-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Vendedor</th>
+                            <th>Status</th>
+                            <th>Valor</th>
+                            <th>Provedor</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = ''; // Deixe em branco para usar o mesmo domínio
+            let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
+
+            const tabs = document.querySelectorAll('.tabs li');
+            const sections = document.querySelectorAll('.section-content');
+
+            // Função para fazer chamadas à API
+            const apiFetch = async (endpoint, options = {}) => {
+                if (!ADMIN_API_KEY) {
+                    ADMIN_API_KEY = prompt('Por favor, insira sua Chave de API de Administrador:');
+                    if (!ADMIN_API_KEY) {
+                        alert('Chave de API é necessária para continuar.');
+                        return;
+                    }
+                    sessionStorage.setItem('ADMIN_API_KEY', ADMIN_API_KEY);
+                }
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'x-admin-api-key': ADMIN_API_KEY,
+                    ...options.headers,
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/admin${endpoint}`, { ...options, headers });
+
+                if (response.status === 403) {
+                    alert('Chave de API inválida ou expirada. A página será recarregada.');
+                    sessionStorage.removeItem('ADMIN_API_KEY');
+                    window.location.reload();
+                    return;
+                }
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Ocorreu um erro na API.');
+                }
+                return response.json();
+            };
+
+            // Funções para carregar e renderizar dados
+            const loadDashboard = async () => {
+                try {
+                    const data = await apiFetch('/dashboard');
+                    const metricsContainer = document.getElementById('dashboard-metrics');
+                    metricsContainer.innerHTML = `
+                        <div class="column is-one-quarter">
+                            <div class="box has-text-centered">
+                                <p class="heading">Vendedores</p>
+                                <p class="title">${data.total_sellers}</p>
+                            </div>
+                        </div>
+                        <div class="column is-one-quarter">
+                            <div class="box has-text-centered">
+                                <p class="heading">Transações Pagas</p>
+                                <p class="title">${data.total_paid_transactions}</p>
+                            </div>
+                        </div>
+                        <div class="column is-one-quarter">
+                             <div class="box has-text-centered">
+                                <p class="heading">Receita Total</p>
+                                <p class="title">R$ ${data.total_revenue}</p>
+                            </div>
+                        </div>
+                        <div class="column is-one-quarter">
+                             <div class="box has-text-centered has-background-success-light">
+                                <p class="heading">Lucro do SaaS</p>
+                                <p class="title has-text-success-dark">R$ ${data.saas_profit}</p>
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    alert(error.message);
+                }
+            };
+            
+            const loadRanking = async () => {
+                const data = await apiFetch('/ranking');
+                const tbody = document.getElementById('ranking-body');
+                tbody.innerHTML = data.map((seller, index) => `
+                    <tr>
+                        <th>${index + 1}</th>
+                        <td>${seller.name}</td>
+                        <td>${seller.email}</td>
+                        <td>${seller.total_sales}</td>
+                        <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            };
+
+            const loadSellers = async () => {
+                const data = await apiFetch('/sellers');
+                const tbody = document.getElementById('sellers-body');
+                tbody.innerHTML = data.map(seller => `
+                    <tr>
+                        <td>${seller.id}</td>
+                        <td>${seller.name}</td>
+                        <td>${seller.email}</td>
+                        <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-small ${seller.is_active ? 'is-warning' : 'is-primary'}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">
+                                    ${seller.is_active ? 'Bloquear' : 'Ativar'}
+                                </button>
+                                <button class="button is-small is-info" onclick="changeSellerPassword(${seller.id})">Alterar Senha</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            };
+
+            const loadTransactions = async () => {
+                const data = await apiFetch('/transactions');
+                const tbody = document.getElementById('transactions-body');
+                tbody.innerHTML = data.transactions.map(tx => `
+                     <tr>
+                        <td>${tx.id}</td>
+                        <td>${tx.seller_name}<br><small>${tx.seller_email}</small></td>
+                        <td><span class="tag ${tx.status === 'paid' ? 'is-success' : 'is-light'}">${tx.status}</span></td>
+                        <td>R$ ${parseFloat(tx.pix_value).toFixed(2)}</td>
+                        <td>${tx.provider}</td>
+                        <td>${new Date(tx.created_at).toLocaleString('pt-BR')}</td>
+                    </tr>
+                `).join('');
+            };
+
+            // Gerenciamento das abas
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => item.classList.remove('is-active'));
+                    sections.forEach(section => section.classList.remove('is-active'));
+
+                    tab.classList.add('is-active');
+                    const target = document.getElementById(tab.dataset.tab);
+                    target.classList.add('is-active');
+
+                    // Carrega os dados da aba clicada
+                    switch(tab.dataset.tab) {
+                        case 'dashboard': loadDashboard(); break;
+                        case 'ranking': loadRanking(); break;
+                        case 'sellers': loadSellers(); break;
+                        case 'transactions': loadTransactions(); break;
+                    }
+                });
+            });
+            
+            // Funções de ação para os botões
+            window.toggleSellerActive = async (id, isActive) => {
+                if (confirm(`Tem certeza que deseja ${isActive ? 'ativar' : 'bloquear'} este usuário?`)) {
+                    await apiFetch(`/sellers/${id}/toggle-active`, {
+                        method: 'POST',
+                        body: JSON.stringify({ isActive })
+                    });
+                    loadSellers();
+                }
+            };
+            
+            window.changeSellerPassword = async (id) => {
+                const newPassword = prompt('Digite a nova senha para o usuário (mínimo 8 caracteres):');
+                if (newPassword && newPassword.length >= 8) {
+                    await apiFetch(`/sellers/${id}/password`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ newPassword })
+                    });
+                    alert('Senha alterada com sucesso!');
+                } else if(newPassword) {
+                    alert('Senha inválida. Tente novamente.');
+                }
+            };
+
+            // Carregar dados da primeira aba ao iniciar
+            loadDashboard();
+        });
+    </script>
+</body>
+</html>
