@@ -1,89 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Painel Administrativo</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
-        .tabs li.is-active a {
-            border-bottom-color: #485fc7;
-            color: #485fc7;
+        :root {
+            --bg-dark: #1a1c23;
+            --bg-light: #252831;
+            --border-color: #363945;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent-color: #4a72ff;
+            --accent-hover: #6c8cff;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            display: flex;
+            font-size: 14px;
+        }
+        #sidebar {
+            width: 240px;
+            background-color: var(--bg-light);
+            padding: 2rem 1rem;
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid var(--border-color);
+        }
+        #sidebar h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.9rem 1rem;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .nav-link i { width: 24px; text-align: center; margin-right: 1rem; }
+        .nav-link:hover { background-color: var(--border-color); color: var(--text-primary); }
+        .nav-link.is-active { background-color: var(--accent-color); color: white; }
+        
+        #main-content {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            padding: 2rem 3rem;
+        }
+        .content-header { margin-bottom: 2rem; }
+        .content-header h2 { font-size: 2rem; font-weight: 700; }
+        
         .section-content { display: none; }
         .section-content.is-active { display: block; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+        .metric-card {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .metric-card .heading { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .metric-card .title { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
+        .metric-card.profit .title { color: var(--success-color); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #2a2d38; }
+
+        .tag { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .tag.is-success { background-color: rgba(40, 167, 69, 0.2); color: #28a745; }
+        .tag.is-danger { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
+        .tag.is-light { background-color: var(--border-color); color: var(--text-secondary); }
+
+        .button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .button.is-primary { background-color: var(--accent-color); color: white; }
+        .button.is-primary:hover { background-color: var(--accent-hover); }
+        .button.is-warning { background-color: var(--warning-color); color: #1a1c23; }
+        .button.is-info { background-color: #17a2b8; color: white; }
     </style>
 </head>
 <body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Painel Administrativo</h1>
-            <p class="subtitle">Gerenciamento do SaaS</p>
 
-            <div class="tabs is-boxed">
-                <ul>
-                    <li class="is-active" data-tab="dashboard"><a><span class="icon is-small"><i class="fas fa-chart-line"></i></span><span>Dashboard</span></a></li>
-                    <li data-tab="ranking"><a><span class="icon is-small"><i class="fas fa-trophy"></i></span><span>Ranking</span></a></li>
-                    <li data-tab="sellers"><a><span class="icon is-small"><i class="fas fa-users"></i></span><span>Vendedores</span></a></li>
-                    <li data-tab="transactions"><a><span class="icon is-small"><i class="fas fa-receipt"></i></span><span>Transações</span></a></li>
-                </ul>
-            </div>
+    <nav id="sidebar">
+        <h1>Admin</h1>
+        <a href="#" class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a href="#" class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
+        <a href="#" class="nav-link" data-tab="sellers"><i class="fas fa-users"></i> Vendedores</a>
+        <a href="#" class="nav-link" data-tab="transactions"><i class="fas fa-receipt"></i> Transações</a>
+    </nav>
 
-            <div id="dashboard" class="section-content is-active">
-                <div class="columns is-multiline" id="dashboard-metrics">
-                    <p>Carregando métricas...</p>
-                </div>
+    <main id="main-content">
+        <section id="dashboard" class="section-content is-active">
+            <div class="content-header">
+                <h2>Dashboard</h2>
+                <p>Visão geral do seu negócio.</p>
             </div>
+            <div class="metrics-grid" id="dashboard-metrics">
+                <p>Carregando métricas...</p>
+            </div>
+        </section>
 
-            <div id="ranking" class="section-content">
-                <table class="table is-fullwidth is-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Vendas Pagas</th>
-                            <th>Faturamento Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="ranking-body"></tbody>
-                </table>
+        <section id="ranking" class="section-content">
+            <div class="content-header">
+                <h2>Ranking de Vendedores</h2>
+                <p>Top 20 vendedores por faturamento.</p>
             </div>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Nome</th><th>Email</th><th>Vendas Pagas</th><th>Faturamento Total</th></tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+        </section>
 
-            <div id="sellers" class="section-content">
-                 <table class="table is-fullwidth is-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sellers-body"></tbody>
-                </table>
+        <section id="sellers" class="section-content">
+            <div class="content-header">
+                <h2>Gerenciar Vendedores</h2>
+                <p>Ative, bloqueie e gerencie seus usuários.</p>
             </div>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Nome</th><th>Email</th><th>Status</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="sellers-body"></tbody>
+            </table>
+        </section>
 
-            <div id="transactions" class="section-content">
-                <table class="table is-fullwidth is-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Vendedor</th>
-                            <th>Status</th>
-                            <th>Valor</th>
-                            <th>Provedor</th>
-                            <th>Data</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transactions-body"></tbody>
-                </table>
-                 <nav class="pagination" role="navigation" aria-label="pagination" id="transactions-pagination"></nav>
+        <section id="transactions" class="section-content">
+             <div class="content-header">
+                <h2>Histórico de Transações</h2>
+                <p>Todas as transações da plataforma.</p>
             </div>
-        </div>
-    </section>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Vendedor</th><th>Status</th><th>Valor</th><th>Provedor</th><th>Data</th></tr>
+                </thead>
+                <tbody id="transactions-body"></tbody>
+            </table>
+        </section>
+    </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -91,10 +172,9 @@
             const API_BASE_URL = 'https://hottrack.vercel.app'; // Substitua pelo seu domínio Vercel
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
 
-            const tabs = document.querySelectorAll('.tabs li');
+            const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.section-content');
 
-            // Função para fazer chamadas à API
             const apiFetch = async (endpoint, options = {}) => {
                 if (!ADMIN_API_KEY) {
                     ADMIN_API_KEY = prompt('Por favor, insira sua Chave de API de Administrador:');
@@ -104,15 +184,8 @@
                     }
                     sessionStorage.setItem('ADMIN_API_KEY', ADMIN_API_KEY);
                 }
-
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'x-admin-api-key': ADMIN_API_KEY,
-                    ...options.headers,
-                };
-
+                const headers = { 'Content-Type': 'application/json', 'x-admin-api-key': ADMIN_API_KEY, ...options.headers, };
                 const response = await fetch(`${API_BASE_URL}/api/admin${endpoint}`, { ...options, headers });
-
                 if (response.status === 403) {
                     alert('Chave de API inválida. Por favor, recarregue a página e tente novamente.');
                     sessionStorage.removeItem('ADMIN_API_KEY');
@@ -125,81 +198,49 @@
                 return response.json();
             };
 
-            // Funções para carregar e renderizar dados
             const loadDashboard = async () => {
                 try {
-                    const data = await apiFetch('/dashboard'); // ROTA CORRIGIDA
+                    const data = await apiFetch('/dashboard');
                     const metricsContainer = document.getElementById('dashboard-metrics');
                     metricsContainer.innerHTML = `
-                        <div class="column is-one-quarter">
-                            <div class="box has-text-centered">
-                                <p class="heading">Vendedores</p>
-                                <p class="title">${data.total_sellers}</p>
-                            </div>
-                        </div>
-                        <div class="column is-one-quarter">
-                            <div class="box has-text-centered">
-                                <p class="heading">Transações Pagas</p>
-                                <p class="title">${data.total_paid_transactions}</p>
-                            </div>
-                        </div>
-                        <div class="column is-one-quarter">
-                             <div class="box has-text-centered">
-                                <p class="heading">Receita Total</p>
-                                <p class="title">R$ ${data.total_revenue}</p>
-                            </div>
-                        </div>
-                        <div class="column is-one-quarter">
-                             <div class="box has-text-centered has-background-success-light">
-                                <p class="heading">Lucro do SaaS</p>
-                                <p class="title has-text-success-dark">R$ ${data.saas_profit}</p>
-                            </div>
-                        </div>
+                        <div class="metric-card"><p class="heading">Vendedores</p><p class="title">${data.total_sellers}</p></div>
+                        <div class="metric-card"><p class="heading">Transações Pagas</p><p class="title">${data.total_paid_transactions}</p></div>
+                        <div class="metric-card"><p class="heading">Receita Total</p><p class="title">R$ ${data.total_revenue}</p></div>
+                        <div class="metric-card profit"><p class="heading">Lucro do SaaS</p><p class="title">R$ ${data.saas_profit}</p></div>
                     `;
-                } catch (error) {
-                    alert(error.message);
-                }
+                } catch (error) { alert(error.message); }
             };
             
             const loadRanking = async () => {
                 const data = await apiFetch('/ranking');
-                const tbody = document.getElementById('ranking-body');
-                tbody.innerHTML = data.map((seller, index) => `
+                document.getElementById('ranking-body').innerHTML = data.map((seller, index) => `
                     <tr>
-                        <th>${index + 1}</th>
+                        <td>${index + 1}</td>
                         <td>${seller.name}</td>
                         <td>${seller.email}</td>
                         <td>${seller.total_sales}</td>
                         <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
-                    </tr>
-                `).join('');
+                    </tr>`).join('');
             };
 
             const loadSellers = async () => {
                 const data = await apiFetch('/sellers');
-                const tbody = document.getElementById('sellers-body');
-                tbody.innerHTML = data.map(seller => `
+                document.getElementById('sellers-body').innerHTML = data.map(seller => `
                     <tr>
                         <td>${seller.id}</td>
                         <td>${seller.name}</td>
                         <td>${seller.email}</td>
                         <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                         <td>
-                            <div class="buttons">
-                                <button class="button is-small ${seller.is_active ? 'is-warning' : 'is-primary'}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">
-                                    ${seller.is_active ? 'Bloquear' : 'Ativar'}
-                                </button>
-                                <button class="button is-small is-info" onclick="changeSellerPassword(${seller.id})">Alterar Senha</button>
-                            </div>
+                            <button class="button is-warning" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">${seller.is_active ? 'Bloquear' : 'Ativar'}</button>
+                            <button class="button is-info" onclick="changeSellerPassword(${seller.id})">Alterar Senha</button>
                         </td>
-                    </tr>
-                `).join('');
+                    </tr>`).join('');
             };
 
             const loadTransactions = async (page = 1) => {
-                const data = await apiFetch(`/transactions?page=${page}&limit=20`);
-                const tbody = document.getElementById('transactions-body');
-                tbody.innerHTML = data.transactions.map(tx => `
+                const data = await apiFetch(`/transactions?page=${page}&limit=50`);
+                document.getElementById('transactions-body').innerHTML = data.transactions.map(tx => `
                      <tr>
                         <td>${tx.id}</td>
                         <td>${tx.seller_name}<br><small>${tx.seller_email}</small></td>
@@ -207,37 +248,19 @@
                         <td>R$ ${parseFloat(tx.pix_value).toFixed(2)}</td>
                         <td>${tx.provider}</td>
                         <td>${new Date(tx.created_at).toLocaleString('pt-BR')}</td>
-                    </tr>
-                `).join('');
-                
-                renderPagination('transactions-pagination', data.page, data.pages, loadTransactions);
+                    </tr>`).join('');
             };
 
-            const renderPagination = (elementId, currentPage, totalPages, callback) => {
-                const container = document.getElementById(elementId);
-                if (totalPages <= 1) {
-                    container.innerHTML = '';
-                    return;
-                }
-                let list = '';
-                for (let i = 1; i <= totalPages; i++) {
-                    list += `<li><a class="pagination-link ${i === currentPage ? 'is-current' : ''}" onclick="window.paginationCallback(${i})">${i}</a></li>`;
-                }
-                container.innerHTML = `<ul class="pagination-list">${list}</ul>`;
-                window.paginationCallback = callback;
-            };
-
-            // Gerenciamento das abas
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(item => item.classList.remove('is-active'));
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navLinks.forEach(item => item.classList.remove('is-active'));
                     sections.forEach(section => section.classList.remove('is-active'));
 
-                    tab.classList.add('is-active');
-                    const target = document.getElementById(tab.dataset.tab);
-                    target.classList.add('is-active');
+                    link.classList.add('is-active');
+                    document.getElementById(link.dataset.tab).classList.add('is-active');
 
-                    switch(tab.dataset.tab) {
+                    switch(link.dataset.tab) {
                         case 'dashboard': loadDashboard(); break;
                         case 'ranking': loadRanking(); break;
                         case 'sellers': loadSellers(); break;
@@ -246,13 +269,9 @@
                 });
             });
             
-            // Funções de ação para os botões
             window.toggleSellerActive = async (id, isActive) => {
                 if (confirm(`Tem certeza que deseja ${isActive ? 'ativar' : 'bloquear'} este usuário?`)) {
-                    await apiFetch(`/sellers/${id}/toggle-active`, {
-                        method: 'POST',
-                        body: JSON.stringify({ isActive })
-                    });
+                    await apiFetch(`/sellers/${id}/toggle-active`, { method: 'POST', body: JSON.stringify({ isActive }) });
                     loadSellers();
                 }
             };
@@ -260,17 +279,13 @@
             window.changeSellerPassword = async (id) => {
                 const newPassword = prompt('Digite a nova senha para o usuário (mínimo 8 caracteres):');
                 if (newPassword && newPassword.length >= 8) {
-                    await apiFetch(`/sellers/${id}/password`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ newPassword })
-                    });
+                    await apiFetch(`/sellers/${id}/password`, { method: 'PUT', body: JSON.stringify({ newPassword }) });
                     alert('Senha alterada com sucesso!');
                 } else if(newPassword) {
                     alert('Senha inválida. Tente novamente.');
                 }
             };
 
-            // Carregar dados da primeira aba ao iniciar
             loadDashboard();
         });
     </script>
