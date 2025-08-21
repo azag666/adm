@@ -37,7 +37,7 @@
             border-right: 1px solid var(--border-color); z-index: 10;
         }
         #sidebar h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 2.5rem; padding: 0 0.5rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 600; transition: all 0.2s ease-in-out; }
+        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 600; transition: all 0.2s ease-in-out; cursor: pointer; }
         .nav-link i { width: 24px; text-align: center; margin-right: 1rem; font-size: 1rem; }
         .nav-link:hover { color: var(--text-primary); }
         .nav-link.is-active { color: var(--text-primary); background-color: var(--bg-card); }
@@ -75,8 +75,8 @@
         .action-button:hover { color: var(--text-primary); border-color: var(--accent-hover); background-color: var(--bg-card); }
         .action-button.danger:hover { color: var(--danger); border-color: var(--danger); }
         
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
-        .modal-content { background-color: var(--bg-card); margin: 15% auto; padding: 2rem; border: 1px solid var(--border-color); width: 80%; max-width: 500px; border-radius: 12px; position: relative; }
+        .modal { display: none; align-items: center; justify-content: center; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); animation: fadeIn 0.2s; }
+        .modal-content { background-color: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); width: 80%; max-width: 500px; border-radius: 12px; position: relative; }
         .close-button { color: var(--text-secondary); position: absolute; top: 1rem; right: 1.5rem; font-size: 28px; font-weight: bold; cursor: pointer; }
         .form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--text-secondary); }
         .form-input { width: 100%; padding: .75rem; background-color: var(--bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-bottom: 1rem; font-size: 1rem; }
@@ -103,7 +103,7 @@
     </div>
 
     <nav id="sidebar">
-        <h1>SaaS</h1>
+        <h1>Admin</h1>
         <a class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
         <a class="nav-link" data-tab="sellers"><i class="fas fa-users-cog"></i> Vendedores</a>
         <a class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
@@ -146,24 +146,23 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE_URL = 'https://hottrack.vercel.app'; // CONFIRME SE ESTA É A URL CORRETA DO SEU BACKEND
+            const API_BASE_URL = 'https://hottrack.vercel.app'; // CONFIRME SE ESTA É A URL CORRETA
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
             let revenueChart = null;
 
             // --- FUNÇÕES DE MOCK DE DADOS (USADAS PARA DEMONSTRAÇÃO) ---
             const createMockSellers = () => {
                 const names = ["AstroDev", "PixelQueen", "CodeVortex", "DataSage", "LogicWiz", "ByteBard", "Scriptina"];
-                return names.map((i, index) => {
-                    const revenue = Math.random() * 20000;
-                    return {
-                        id: index + 1, name: names[index], email: `${names[index].toLowerCase()}@email.com`, 
-                        is_active: Math.random() > 0.2, total_revenue: revenue,
-                        commission_percentage: index % 3 === 0 ? 5.0 : null,
-                        commission_fixed_brl: null,
-                    };
-                }).sort((a,b) => b.total_revenue - a.total_revenue);
+                return names.map((name, i) => ({
+                    id: i + 1, name: name, email: `${name.toLowerCase()}@email.com`, 
+                    is_active: Math.random() > 0.2, total_revenue: Math.random() * 20000,
+                    total_sales: Math.floor(Math.random() * 500),
+                    commission_percentage: i % 3 === 0 ? 5.0 : null,
+                    commission_fixed_brl: null,
+                })).sort((a,b) => b.total_revenue - a.total_revenue);
             };
             const MOCK_SELLERS = createMockSellers();
+            // --- FIM DO BLOCO DE MOCK ---
 
             const apiFetch = async (endpoint, options = {}) => {
                 // Para usar dados reais, comente o bloco abaixo e descomente o fetch real
@@ -174,11 +173,12 @@
                     const totalRevenue = MOCK_SELLERS.reduce((sum, s) => sum + s.total_revenue, 0);
                     return {
                         total_sellers: MOCK_SELLERS.length,
-                        total_paid_transactions: Math.floor(totalRevenue / 75),
+                        total_paid_transactions: MOCK_SELLERS.reduce((sum, s) => sum + s.total_sales, 0),
                         total_revenue: totalRevenue.toFixed(2),
                         saas_profit: (totalRevenue * 0.0299).toFixed(2),
                     };
                 }
+                if(options.method) return { message: 'Ação executada com sucesso (MOCK)!'}; // Mock para ações POST/PUT
                 
                 /*
                 // --- CÓDIGO REAL DA API (DESCOMENTE QUANDO O BACKEND ESTIVER PRONTO) ---
@@ -201,7 +201,6 @@
                 */
             };
             
-            // (O resto das funções JS permanecem as mesmas, adaptadas para a nova interface)
             const getLevel = (revenue) => {
                 revenue = parseFloat(revenue);
                 if (revenue < 1000) return { name: "Bronze" };
@@ -217,14 +216,17 @@
                     document.getElementById('metric-sellers').textContent = data.total_sellers;
                     document.getElementById('metric-sales').textContent = data.total_paid_transactions;
                     document.getElementById('metric-profit').textContent = `R$ ${parseFloat(data.saas_profit).toLocaleString('pt-BR')}`;
-                    
                     const rankingData = await apiFetch('/ranking');
-                    document.getElementById('leaderboard-body').innerHTML = rankingData.slice(0, 5).map((seller, i) => {
-                        const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-                        return `<div class="leaderboard-item ${rankClass}"><div class="rank">#${i + 1}</div><div class="info"><div class="name">${seller.name}</div><div class="revenue">R$ ${parseFloat(seller.total_revenue).toFixed(2)}</div></div></div>`
-                    }).join('');
+                    renderLeaderboard(rankingData.slice(0, 5));
                     renderChart();
-                } catch (error) { alert('Não foi possível carregar os dados do dashboard: ' + error.message); }
+                } catch (error) { alert('Não foi possível carregar os dados: ' + error.message); }
+            };
+            
+            const renderLeaderboard = (data) => {
+                document.getElementById('leaderboard-body').innerHTML = data.map((seller, i) => {
+                    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                    return `<div class="leaderboard-item ${rankClass}"><div class="rank">#${i + 1}</div><div class="info"><div class="name">${seller.name}</div><div class="revenue">R$ ${parseFloat(seller.total_revenue).toFixed(2)}</div></div></div>`
+                }).join('');
             };
 
             const loadSellers = async () => {
@@ -244,15 +246,25 @@
                         <td>${commissionText}</td>
                         <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                         <td>
-                            <button title="Bloquear/Ativar" class="action-button ${seller.is_active ? 'danger' : ''}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})"><i class="fas ${seller.is_active ? 'fa-lock' : 'fa-lock-open'}"></i></button>
+                            <button title="${seller.is_active ? 'Bloquear' : 'Ativar'} Usuário" class="action-button ${seller.is_active ? 'danger' : ''}" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})"><i class="fas ${seller.is_active ? 'fa-lock' : 'fa-lock-open'}"></i></button>
                             <button title="Alterar Senha" class="action-button" onclick="changeSellerPassword(${seller.id})"><i class="fas fa-key"></i></button>
                             <button title="Definir Comissão" class="action-button" onclick="openCommissionModal(${seller.id}, '${seller.commission_percentage || ''}', '${seller.commission_fixed_brl || ''}')"><i class="fas fa-percent"></i></button>
                         </td>
                     </tr>`
                 }).join('');
             };
-
-            const loadRanking = async () => { /* ... sua implementação ... */ };
+            
+            const loadRanking = async () => {
+                const data = await apiFetch('/ranking');
+                document.getElementById('ranking-body').innerHTML = data.map((seller, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${seller.name}</td>
+                        <td>${seller.email}</td>
+                        <td>${seller.total_sales}</td>
+                        <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
+                    </tr>`).join('');
+            };
 
             const renderChart = () => {
                 const ctx = document.getElementById('revenue-chart').getContext('2d');
@@ -299,12 +311,43 @@
                 document.getElementById('commission-seller-id').value = id;
                 document.getElementById('commission-percentage').value = percentage;
                 document.getElementById('commission-fixed').value = fixed;
-                commissionModal.style.display = 'block';
+                commissionModal.style.display = 'flex';
             };
             window.closeCommissionModal = () => commissionModal.style.display = 'none';
-            window.saveCommission = async () => { /* ... sua implementação ... */ };
-            window.toggleSellerActive = async (id, isActive) => { /* ... sua implementação ... */ };
-            window.changeSellerPassword = async (id) => { /* ... sua implementação ... */ };
+            window.saveCommission = async () => {
+                const id = document.getElementById('commission-seller-id').value;
+                const percentage = document.getElementById('commission-percentage').value;
+                const fixed = document.getElementById('commission-fixed').value;
+                try {
+                    await apiFetch(`/sellers/${id}/commission`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            percentage: percentage ? parseFloat(percentage) : null,
+                            fixed: fixed ? parseFloat(fixed) : null,
+                        })
+                    });
+                    alert('Comissão atualizada!');
+                    closeCommissionModal();
+                    loadSellers();
+                } catch (error) { alert('Erro ao salvar comissão: ' + error.message); }
+            };
+            window.toggleSellerActive = async (id, isActive) => {
+                if (confirm(`Tem certeza que deseja ${isActive ? 'ativar' : 'bloquear'} este usuário?`)) {
+                    try {
+                        await apiFetch(`/sellers/${id}/toggle-active`, { method: 'POST', body: JSON.stringify({ isActive }) });
+                        loadSellers();
+                    } catch (error) { alert('Erro ao alterar status: ' + error.message); }
+                }
+            };
+            window.changeSellerPassword = async (id) => {
+                const newPassword = prompt('Digite a nova senha (mínimo 8 caracteres):');
+                if (newPassword && newPassword.length >= 8) {
+                    try {
+                        await apiFetch(`/sellers/${id}/password`, { method: 'PUT', body: JSON.stringify({ newPassword }) });
+                        alert('Senha alterada com sucesso!');
+                    } catch (error) { alert('Erro ao alterar senha: ' + error.message); }
+                } else if(newPassword) { alert('Senha inválida.'); }
+            };
 
             loadDashboard();
         });
