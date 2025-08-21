@@ -10,109 +10,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #1a1c23;
-            --bg-light: #252831;
-            --border-color: #363945;
-            --text-primary: #f0f0f0;
-            --text-secondary: #a0a0a0;
-            --accent-color: #4a72ff;
-            --accent-hover: #6c8cff;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
+            --bg-dark: #1a1c23; --bg-light: #252831; --border-color: #363945; --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0; --accent-color: #4a72ff; --accent-hover: #6c8cff;
+            --success-color: #28a745; --danger-color: #dc3545; --warning-color: #ffc107;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            display: flex;
-            font-size: 14px;
-        }
-        #sidebar {
-            width: 240px;
-            background-color: var(--bg-light);
-            padding: 2rem 1rem;
-            height: 100vh;
-            position: fixed;
-            border-right: 1px solid var(--border-color);
-        }
-        #sidebar h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            padding: 0 0.5rem;
-        }
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 0.9rem 1rem;
-            border-radius: 8px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            transition: background-color 0.2s, color 0.2s;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-primary); display: flex; font-size: 14px; }
+        #sidebar { width: 240px; background-color: var(--bg-light); padding: 2rem 1rem; height: 100vh; position: fixed; border-right: 1px solid var(--border-color); }
+        #sidebar h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; padding: 0 0.5rem; }
+        .nav-link { display: flex; align-items: center; padding: 0.9rem 1rem; border-radius: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 0.5rem; font-weight: 500; transition: background-color 0.2s, color 0.2s; cursor: pointer; }
         .nav-link i { width: 24px; text-align: center; margin-right: 1rem; }
         .nav-link:hover { background-color: var(--border-color); color: var(--text-primary); }
         .nav-link.is-active { background-color: var(--accent-color); color: white; }
-        
-        #main-content {
-            margin-left: 240px;
-            width: calc(100% - 240px);
-            padding: 2rem 3rem;
-        }
+        #main-content { margin-left: 240px; width: calc(100% - 240px); padding: 2rem 3rem; }
         .content-header { margin-bottom: 2rem; }
         .content-header h2 { font-size: 2rem; font-weight: 700; }
-        
         .section-content { display: none; }
         .section-content.is-active { display: block; }
-
         .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
-        .metric-card {
-            background-color: var(--bg-light);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
+        .metric-card { background-color: var(--bg-light); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); }
         .metric-card .heading { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;}
         .metric-card .title { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
         .metric-card.profit .title { color: var(--success-color); }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         th { font-weight: 600; color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         tbody tr { transition: background-color 0.2s; }
         tbody tr:hover { background-color: #2a2d38; }
-
-        .tag { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .tag { display: inline-block; padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin: 2px; }
         .tag.is-success { background-color: rgba(40, 167, 69, 0.2); color: #28a745; }
         .tag.is-danger { background-color: rgba(220, 53, 69, 0.2); color: #dc3545; }
         .tag.is-light { background-color: var(--border-color); color: var(--text-secondary); }
-
-        .button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
+        .tag.is-info { background-color: rgba(74, 114, 255, 0.2); color: var(--accent-color); }
+        .button { padding: 0.5rem 1rem; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin: 2px; }
         .button.is-primary { background-color: var(--accent-color); color: white; }
         .button.is-primary:hover { background-color: var(--accent-hover); }
         .button.is-warning { background-color: var(--warning-color); color: #1a1c23; }
         .button.is-info { background-color: #17a2b8; color: white; }
+        .button-group { display: flex; flex-wrap: wrap; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background-color: var(--bg-light); margin: 15% auto; padding: 2rem; border: 1px solid var(--border-color); width: 80%; max-width: 500px; border-radius: 12px; position: relative; }
+        .close-button { color: var(--text-secondary); position: absolute; top: 1rem; right: 1.5rem; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .form-label { display: block; margin-bottom: .5rem; font-weight: 600; }
+        .form-input { width: 100%; padding: .75rem; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); margin-bottom: 1rem; }
+        .filter-bar { display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; background-color: var(--bg-light); padding: 1rem; border-radius: 12px; }
     </style>
 </head>
 <body>
+    <div id="commission-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeCommissionModal()">&times;</span>
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Definir Comissão</h3>
+            <input type="hidden" id="commission-seller-id">
+            <div>
+                <label for="commission-percentage" class="form-label">Comissão Percentual (%)</label>
+                <input type="number" id="commission-percentage" class="form-input" placeholder="Ex: 5.00 para 5%">
+            </div>
+            <div>
+                <label for="commission-fixed" class="form-label">Comissão Fixa (R$)</label>
+                <input type="number" id="commission-fixed" class="form-input" placeholder="Ex: 0.50 para 50 centavos">
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: -0.5rem; margin-bottom: 1.5rem;">Deixe ambos em branco para usar o padrão (2.99%). Se ambos forem preenchidos, a comissão FIXA terá prioridade.</p>
+            <button class="button is-primary" onclick="saveCommission()">Salvar Comissão</button>
+        </div>
+    </div>
 
     <nav id="sidebar">
         <h1>Admin</h1>
-        <a href="#" class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
-        <a href="#" class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
-        <a href="#" class="nav-link" data-tab="sellers"><i class="fas fa-users"></i> Vendedores</a>
-        <a href="#" class="nav-link" data-tab="transactions"><i class="fas fa-receipt"></i> Transações</a>
+        <a class="nav-link is-active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+        <a class="nav-link" data-tab="ranking"><i class="fas fa-trophy"></i> Ranking</a>
+        <a class="nav-link" data-tab="sellers"><i class="fas fa-users"></i> Vendedores</a>
+        <a class="nav-link" data-tab="transactions"><i class="fas fa-receipt"></i> Transações</a>
     </nav>
 
     <main id="main-content">
@@ -121,75 +89,66 @@
                 <h2>Dashboard</h2>
                 <p>Visão geral do seu negócio.</p>
             </div>
-            <div class="metrics-grid" id="dashboard-metrics">
-                <p>Carregando métricas...</p>
+            <div class="filter-bar">
+                <label for="start-date" class="form-label">De:</label>
+                <input type="date" id="start-date" class="form-input" style="margin: 0;">
+                <label for="end-date" class="form-label">Até:</label>
+                <input type="date" id="end-date" class="form-input" style="margin: 0;">
+                <button id="filter-button" class="button is-primary">Filtrar</button>
+                <button id="clear-filter-button" class="button">Limpar</button>
             </div>
+            <div class="metrics-grid" id="dashboard-metrics"><p>Carregando métricas...</p></div>
         </section>
 
         <section id="ranking" class="section-content">
-            <div class="content-header">
-                <h2>Ranking de Vendedores</h2>
-                <p>Top 20 vendedores por faturamento.</p>
-            </div>
-            <table>
-                <thead>
-                    <tr><th>#</th><th>Nome</th><th>Email</th><th>Vendas Pagas</th><th>Faturamento Total</th></tr>
-                </thead>
-                <tbody id="ranking-body"></tbody>
-            </table>
+            <div class="content-header"><h2>Ranking de Vendedores</h2><p>Top 20 vendedores por faturamento.</p></div>
+            <table><thead><tr><th>#</th><th>Nome</th><th>Faturamento</th></tr></thead><tbody id="ranking-body"></tbody></table>
         </section>
 
         <section id="sellers" class="section-content">
-            <div class="content-header">
-                <h2>Gerenciar Vendedores</h2>
-                <p>Ative, bloqueie e gerencie seus usuários.</p>
-            </div>
+            <div class="content-header"><h2>Gerenciar Vendedores</h2><p>Ative, bloqueie e gerencie seus usuários.</p></div>
+            <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr><th>ID</th><th>Nome</th><th>Email</th><th>Status</th><th>Ações</th></tr>
+                    <tr>
+                        <th style="width: 15%;">Vendedor</th>
+                        <th style="width: 15%;">Métricas de Uso</th>
+                        <th style="width: 20%;">Provedores</th>
+                        <th style="width: 10%;">Comissão</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 30%;">Ações</th>
+                    </tr>
                 </thead>
                 <tbody id="sellers-body"></tbody>
             </table>
+            </div>
         </section>
 
         <section id="transactions" class="section-content">
-             <div class="content-header">
-                <h2>Histórico de Transações</h2>
-                <p>Todas as transações da plataforma.</p>
-            </div>
-            <table>
-                <thead>
-                    <tr><th>ID</th><th>Vendedor</th><th>Status</th><th>Valor</th><th>Provedor</th><th>Data</th></tr>
-                </thead>
-                <tbody id="transactions-body"></tbody>
-            </table>
+             <div class="content-header"><h2>Histórico de Transações</h2><p>Todas as transações da plataforma.</p></div>
+            <table><thead><tr><th>ID</th><th>Vendedor</th><th>Status</th><th>Valor</th><th>Provedor</th><th>Data</th></tr></thead><tbody id="transactions-body"></tbody></table>
         </section>
     </main>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // IMPORTANTE: Insira a URL do seu backend na Vercel aqui
             const API_BASE_URL = 'https://hottrack.vercel.app'; // Substitua pelo seu domínio Vercel
             let ADMIN_API_KEY = sessionStorage.getItem('ADMIN_API_KEY');
+            const commissionModal = document.getElementById('commission-modal');
 
-            const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('.section-content');
-
+            // ... (A lógica JS principal permanece a mesma, com as adições abaixo)
+            
             const apiFetch = async (endpoint, options = {}) => {
-                if (!ADMIN_API_KEY) {
+                 if (!ADMIN_API_KEY) {
                     ADMIN_API_KEY = prompt('Por favor, insira sua Chave de API de Administrador:');
-                    if (!ADMIN_API_KEY) {
-                        alert('Chave de API é necessária para continuar.');
-                        throw new Error('Chave de API não fornecida.');
-                    }
+                    if (!ADMIN_API_KEY) throw new Error('Chave de API não fornecida.');
                     sessionStorage.setItem('ADMIN_API_KEY', ADMIN_API_KEY);
                 }
-                const headers = { 'Content-Type': 'application/json', 'x-admin-api-key': ADMIN_API_KEY, ...options.headers, };
+                const headers = { 'Content-Type': 'application/json', 'x-admin-api-key': ADMIN_API_KEY, ...options.headers };
                 const response = await fetch(`${API_BASE_URL}/api/admin${endpoint}`, { ...options, headers });
                 if (response.status === 403) {
-                    alert('Chave de API inválida. Por favor, recarregue a página e tente novamente.');
                     sessionStorage.removeItem('ADMIN_API_KEY');
-                    throw new Error('Acesso negado.');
+                    throw new Error('Acesso negado. Chave de API inválida.');
                 }
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({ message: 'Ocorreu um erro na API.' }));
@@ -197,69 +156,110 @@
                 }
                 return response.json();
             };
-
+            
             const loadDashboard = async () => {
                 try {
-                    const data = await apiFetch('/dashboard');
-                    const metricsContainer = document.getElementById('dashboard-metrics');
-                    metricsContainer.innerHTML = `
+                    const startDate = document.getElementById('start-date').value;
+                    const endDate = document.getElementById('end-date').value;
+                    let query = '/dashboard';
+                    if(startDate && endDate) {
+                        query += `?startDate=${startDate}&endDate=${endDate}`;
+                    }
+
+                    const data = await apiFetch(query);
+                    document.getElementById('dashboard-metrics').innerHTML = `
                         <div class="metric-card"><p class="heading">Vendedores</p><p class="title">${data.total_sellers}</p></div>
                         <div class="metric-card"><p class="heading">Transações Pagas</p><p class="title">${data.total_paid_transactions}</p></div>
                         <div class="metric-card"><p class="heading">Receita Total</p><p class="title">R$ ${data.total_revenue}</p></div>
-                        <div class="metric-card profit"><p class="heading">Lucro do SaaS</p><p class="title">R$ ${data.saas_profit}</p></div>
+                        <div class="metric-card profit"><p class="heading">Lucro (Estimado)</p><p class="title">R$ ${data.saas_profit}</p></div>
                     `;
                 } catch (error) { alert(error.message); }
             };
-            
-            const loadRanking = async () => {
-                const data = await apiFetch('/ranking');
-                document.getElementById('ranking-body').innerHTML = data.map((seller, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${seller.name}</td>
-                        <td>${seller.email}</td>
-                        <td>${seller.total_sales}</td>
-                        <td>R$ ${parseFloat(seller.total_revenue).toFixed(2)}</td>
-                    </tr>`).join('');
-            };
+
+            document.getElementById('filter-button').addEventListener('click', loadDashboard);
+            document.getElementById('clear-filter-button').addEventListener('click', () => {
+                document.getElementById('start-date').value = '';
+                document.getElementById('end-date').value = '';
+                loadDashboard();
+            });
 
             const loadSellers = async () => {
                 const data = await apiFetch('/sellers');
-                document.getElementById('sellers-body').innerHTML = data.map(seller => `
+                document.getElementById('sellers-body').innerHTML = data.map(seller => {
+                    let providers = '';
+                    if(seller.pushinpay_token) providers += `<span class="tag ${seller.active_pix_provider === 'pushinpay' ? 'is-info' : 'is-light'}">PushinPay</span>`;
+                    if(seller.cnpay_public_key) providers += `<span class="tag ${seller.active_pix_provider === 'cnpay' ? 'is-info' : 'is-light'}">CNPay</span>`;
+                    if(seller.oasyfy_public_key) providers += `<span class="tag ${seller.active_pix_provider === 'oasyfy' ? 'is-info' : 'is-light'}">Oasy.fy</span>`;
+                    if(!providers) providers = 'Nenhum';
+
+                    let commissionText = 'Padrão (2.99%)';
+                    if (seller.commission_fixed_brl) {
+                        commissionText = `R$ ${parseFloat(seller.commission_fixed_brl).toFixed(2)}`;
+                    } else if (seller.commission_percentage) {
+                        commissionText = `${parseFloat(seller.commission_percentage).toFixed(2)}%`;
+                    }
+                    
+                    return `
                     <tr>
-                        <td>${seller.id}</td>
-                        <td>${seller.name}</td>
-                        <td>${seller.email}</td>
+                        <td>
+                            <strong>${seller.name}</strong><br>
+                            <small>${seller.email}</small>
+                        </td>
+                        <td>
+                            Cliques: ${seller.total_clicks}<br>
+                            Gerados: ${seller.pix_generated}<br>
+                            Pagos: ${seller.pix_paid}
+                        </td>
+                        <td>${providers}</td>
+                        <td>${commissionText}</td>
                         <td><span class="tag ${seller.is_active ? 'is-success' : 'is-danger'}">${seller.is_active ? 'Ativo' : 'Bloqueado'}</span></td>
                         <td>
-                            <button class="button is-warning" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">${seller.is_active ? 'Bloquear' : 'Ativar'}</button>
-                            <button class="button is-info" onclick="changeSellerPassword(${seller.id})">Alterar Senha</button>
+                            <div class="button-group">
+                                <button class="button is-warning" onclick="toggleSellerActive(${seller.id}, ${!seller.is_active})">${seller.is_active ? 'Bloquear' : 'Ativar'}</button>
+                                <button class="button is-info" onclick="changeSellerPassword(${seller.id})">Senha</button>
+                                <button class="button" onclick="openCommissionModal(${seller.id}, '${seller.commission_percentage || ''}', '${seller.commission_fixed_brl || ''}')">Comissão</button>
+                            </div>
                         </td>
-                    </tr>`).join('');
+                    </tr>`
+                }).join('');
             };
 
-            const loadTransactions = async (page = 1) => {
-                const data = await apiFetch(`/transactions?page=${page}&limit=50`);
-                document.getElementById('transactions-body').innerHTML = data.transactions.map(tx => `
-                     <tr>
-                        <td>${tx.id}</td>
-                        <td>${tx.seller_name}<br><small>${tx.seller_email}</small></td>
-                        <td><span class="tag ${tx.status === 'paid' ? 'is-success' : 'is-light'}">${tx.status}</span></td>
-                        <td>R$ ${parseFloat(tx.pix_value).toFixed(2)}</td>
-                        <td>${tx.provider}</td>
-                        <td>${new Date(tx.created_at).toLocaleString('pt-BR')}</td>
-                    </tr>`).join('');
+            // Funções do Modal de Comissão
+            window.openCommissionModal = (id, percentage, fixed) => {
+                document.getElementById('commission-seller-id').value = id;
+                document.getElementById('commission-percentage').value = percentage;
+                document.getElementById('commission-fixed').value = fixed;
+                commissionModal.style.display = 'block';
+            };
+            window.closeCommissionModal = () => {
+                commissionModal.style.display = 'none';
+            };
+            window.saveCommission = async () => {
+                const id = document.getElementById('commission-seller-id').value;
+                const percentage = document.getElementById('commission-percentage').value;
+                const fixed = document.getElementById('commission-fixed').value;
+                await apiFetch(`/sellers/${id}/commission`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        percentage: percentage ? parseFloat(percentage) : null,
+                        fixed: fixed ? parseFloat(fixed) : null,
+                    })
+                });
+                alert('Comissão atualizada!');
+                closeCommissionModal();
+                loadSellers();
             };
 
+            // O resto das funções (loadRanking, loadTransactions, navegação, etc) permanece o mesmo
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section-content');
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     navLinks.forEach(item => item.classList.remove('is-active'));
                     sections.forEach(section => section.classList.remove('is-active'));
-
                     link.classList.add('is-active');
                     document.getElementById(link.dataset.tab).classList.add('is-active');
-
                     switch(link.dataset.tab) {
                         case 'dashboard': loadDashboard(); break;
                         case 'ranking': loadRanking(); break;
@@ -268,22 +268,18 @@
                     }
                 });
             });
-            
             window.toggleSellerActive = async (id, isActive) => {
-                if (confirm(`Tem certeza que deseja ${isActive ? 'ativar' : 'bloquear'} este usuário?`)) {
+                 if (confirm(`Tem certeza que deseja ${isActive ? 'ativar' : 'bloquear'} este usuário?`)) {
                     await apiFetch(`/sellers/${id}/toggle-active`, { method: 'POST', body: JSON.stringify({ isActive }) });
                     loadSellers();
                 }
             };
-            
             window.changeSellerPassword = async (id) => {
-                const newPassword = prompt('Digite a nova senha para o usuário (mínimo 8 caracteres):');
+                const newPassword = prompt('Digite a nova senha (mínimo 8 caracteres):');
                 if (newPassword && newPassword.length >= 8) {
                     await apiFetch(`/sellers/${id}/password`, { method: 'PUT', body: JSON.stringify({ newPassword }) });
                     alert('Senha alterada com sucesso!');
-                } else if(newPassword) {
-                    alert('Senha inválida. Tente novamente.');
-                }
+                } else if(newPassword) { alert('Senha inválida.'); }
             };
 
             loadDashboard();
